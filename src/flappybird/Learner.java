@@ -24,7 +24,6 @@ public class Learner {
         try {
             Path path = Paths.get("learning.txt");
             if (Files.exists(path)) {
-                System.out.println("delete file");
                 Files.delete(path);
             }
             log = new PrintWriter("learning.txt");
@@ -38,10 +37,11 @@ public class Learner {
         this.Q = Q;
     }
 
+    /* updates the Q value of the previous state-action */
     public int update(boolean dead, float birdY, float pipeX, float pipeY, int score) {
         timeStep++;
         if (timeStep % 100 == 0) {
-            System.out.println(timeStep + ", Q size:" + Q.size() + ", " + Q + "\n");
+            System.out.println(timeStep + ", Q size:" + Q.size() + ", " + Q);
         }
         
         log.write("birdY:" + birdY + ", pipeX:" + pipeX + ", pipeY:" + pipeY + "\n");
@@ -96,13 +96,14 @@ public class Learner {
             int score) {
         int yDistance = (int) (birdY - pipeY);
         String state = yDistance + "-" + (int) pipeX;
-        int action = getRandomAction();
-        String stateAction = state + "-" + action;
         if (prevStateAction == null) {
-            // initial
-            prevStateAction = stateAction;
+            // first ever state (beginning of training)
+            int action = getRandomAction();
+            prevStateAction = state + "-" + action;
             return action;
         } else {
+            // take the action whose value is larger 99% of the time
+            int action = getExploreExploitAction(state); 
             int reward = dead ? -1000 : 1;
             float oldValue = getQ(prevStateAction);
             float newValue = (1 - ALPHA) * oldValue
@@ -132,12 +133,26 @@ public class Learner {
         // returns 0 or 1 randomly
         return ThreadLocalRandom.current().nextInt(0, 2);
     }
+    
+    private int getExploreExploitAction(String state) {
+        // returns 0 or 1 randomly
+        // exploit 99% of the time
+        float action0Value = getQ(state, 0);
+        float action1Value = getQ(state, 1);
+        if (timeStep % 100 == 0) {
+            // explore, return the smaller value
+            return action0Value < action1Value ? 0 : 1;
+        } else {
+            // exploit, return the bigger value
+            return action0Value > action1Value ? 0 : 1;
+        }
+    }
 
     private float getMaxQ(String state) {
         // return the maximum of Q(state, 0) and Q(state, 1)
         return Math.max(getQ(state, 0), getQ(state, 1));
     }
-
+    
     private float getQ(String state, int action) {
         return getQ(state + "-" + action);
     }

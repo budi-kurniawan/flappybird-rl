@@ -27,7 +27,7 @@ import com.jme3.ui.Picture;
 public class RLGame extends SimpleApplication {
     
     private static final boolean LEARNING = true;
-    public static final int LEARNING_TIME_STEPS = 10000;
+    public static final int LEARNING_TIME_STEPS = 6000;
     
     private static final float LOWER_PIPE_INITIAL_Y = -260;
     private static final float UPPER_PIPE_INITIAL_Y = 120;
