@@ -16,6 +16,7 @@ public class Learner {
 
     private static final float ALPHA = 0.7F;
     private static final float GAMMA = 1;
+    private static final float EPSILON = 0.1F;
 
     PrintWriter log;
     private int timeStep = 0;
@@ -51,7 +52,6 @@ public class Learner {
         if (timeStep < RLGame.LEARNING_TIME_STEPS) {
             int retVal = learn(dead, birdY, pipeX, pipeY, score);
             log.write(timeStep + ", Q size:" + Q.size() + ", " + Q + "\n");
-            
             return retVal;
         } else {
             return play(dead, birdY, pipeX, pipeY, score);
@@ -134,22 +134,25 @@ public class Learner {
         return ThreadLocalRandom.current().nextInt(0, 2);
     }
     
+    /**
+     * Returns an action by exploitation or exploration. We explore using epsilon-greedy algorithm.
+     * @param state
+     * @return An action (0 or 1)
+     */
     private int getExploreExploitAction(String state) {
-        // returns 0 or 1 randomly
-        // exploit 99% of the time
-        float action0Value = getQ(state, 0);
-        float action1Value = getQ(state, 1);
-        if (timeStep % 100 == 0) {
-            // explore, return the smaller value
-            return action0Value < action1Value ? 0 : 1;
+        // nextFloat returns a float x where 0 <= x < 1
+        float random = ThreadLocalRandom.current().nextFloat(); 
+        if (random < EPSILON) {
+            // explore, return a random action
+            return getRandomAction();
         } else {
             // exploit, return the bigger value
-            return action0Value > action1Value ? 0 : 1;
+            return getQ(state, 0) > getQ(state, 1) ? 0 : 1;
         }
     }
 
+    // Returns the maximum of Q(state, 0) and Q(state, 1)
     private float getMaxQ(String state) {
-        // return the maximum of Q(state, 0) and Q(state, 1)
         return Math.max(getQ(state, 0), getQ(state, 1));
     }
     
